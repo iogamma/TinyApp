@@ -1,17 +1,21 @@
 /* express_server.js */
+
 // load the things we need
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
+const fs = ('fs');
 
+const app = express();
 const urlDatabase = {};
 
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
 
+// Routes
+
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('urls_index');
 });
 
 app.get('/urls', (req, res) => {
@@ -19,18 +23,8 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// app.get("/urls/:id", (req, res) => {
-//   let templateVars = { shortURL: req.params.id };
-//   res.render('urls_show', templateVars);
-// });
-
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
-});
-
-app.post("/urls", (req, res) => {
-  urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
-  console.log(urlDatabase);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -38,9 +32,16 @@ app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     res.redirect(longURL);
   } else {
-    console.log("The short URL does not exist in database.");
+    console.log("The short URL does not exist in the database.");
   }
 });
+
+app.post("/urls", (req, res) => {
+  urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
+  console.log(urlDatabase);
+});
+
+
 
 function generateRandStr() {
   let randNum;

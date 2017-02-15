@@ -1,6 +1,6 @@
 {
-  "name": "node-ejs",
-  "main": "server.js",
+  "name": "tiny_app",
+  "main": "express_server.js",
   "version": "1.0.0",
   "description": "",
   "scripts": {
