@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>TinyApp</title>
-</head>
-<body>
-  <header>
-    <% include partials/_header %>
-  </header>
-  <p>urls_show.ejs</p>
-</body>
+  <head>
+    <title>TinyApp</title>
+  </head>
+  <body>
+    <header>
+      <% include partials/_header %>
+    </header>
+    <h1>ShortURL: <%= id %></h1>
+    <form method="POST" action=<%= `/urls/${id}` %> style="margin:150;">
+      <input id=newlongURL type='text' name='newlongURL' placeholder='http://'' style="width: 300px">
+      <input type='submit' value='update'>
+    </form>
+  </body>
 </html>
 
