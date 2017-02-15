@@ -24,7 +24,7 @@ app.get('/urls', (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  res.render('urls_new');
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -36,9 +36,14 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+app.post("/urls/:shortURLToDel/delete", (req, res) => {
+  let templateVars = { urls: urlDatabase };
+  delete urlDatabase[req.params.shortURLToDel];
+  res.render('urls_index', templateVars);
+});
 app.post("/urls", (req, res) => {
   urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
-  console.log(urlDatabase);
+  res.redirect('/urls');
 });
 
 
