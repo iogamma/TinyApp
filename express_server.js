@@ -29,16 +29,27 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
+  console.log(urlDatabase);
 });
 
-function generateRandomString() {
+app.get("/u/:shortURL", (req, res) => {
+  longURL = urlDatabase[req.params.shortURL];
+  if (urlDatabase[req.params.shortURL]) {
+    res.redirect(longURL);
+  } else {
+    console.log("The short URL does not exist in database.");
+  }
+});
+
+function generateRandStr() {
   let randNum;
   let randString = "";
 
   for (let i = 0; i < 6; i++) {
+    // generate a random number from 36 to 83 (ie starting at unicode character 0)
     randNum = Math.floor(Math.random() * 36) + 48;
+    // convert anything greather than 57 to unicode a-z
     randNum > 57 ? randNum += 39 : null ;
     randString += String.fromCharCode(randNum);
   }
