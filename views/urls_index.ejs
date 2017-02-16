@@ -10,9 +10,9 @@
   <h1><%= `Hello! ${user.email}` %></h1>
   <p><a href="/urls/new">Add a new URL</a></p>
   <ul>
-    <% for(url in urls) { %>
+    <% for(const url in listOfURLs) { %>
     <li>
-      <%= `${url}: ${urls[url]}` %>
+      <%= `${url}: ${listOfURLs[url]}` %>
       <a href=<%= `/urls/${url}` %>>Edit</a>
       <form method="POST" action="/urls/<%= url %>/delete">
         <input type="submit" value="Delete">

@@ -10,7 +10,20 @@ const toolbox = require('./lib/toolbox')
 
 const TinyApp= express();
 const generateRandStr = toolbox.generateRandStr;
-const urlDatabase = {};
+const urlDatabase = {
+  zxcvbn: {
+    longURL: 'http://www.google.ca',
+    uid: 'abcdef'
+  },
+  uidfke: {
+    longURL: 'http://www.askjeeves.com',
+    uid: 'qwerty'
+  },
+  hfkell: {
+    longURL: 'http://www.monster.ca',
+    uid: 'abcdef'
+  }
+};
 const users = {
   abcdef: {
     id: generateRandStr(),
@@ -32,6 +45,17 @@ TinyApp.set('view engine', 'ejs');
 TinyApp.use(bodyParser.urlencoded({extended: true}));
 TinyApp.use(cookieParser());
 
+//====== Helper Functions
+function urlsForUser(id) {
+  let listOfURLs = {};
+  for (let shortURL in urlDatabase) {
+    if (urlDatabase[`${shortURL}`].uid === id) {
+      listOfURLs[`${shortURL}`] = urlDatabase[`${shortURL}`].longURL;
+    }
+  }
+  return listOfURLs;
+}
+
 //====== Get Method Routes
 
 TinyApp.get('/', (req, res) => {
@@ -43,17 +67,25 @@ TinyApp.get('/', (req, res) => {
 
 TinyApp.get('/urls', (req, res) => {
   const templateVars = {
-    urls: urlDatabase,
+    listOfURLs: urlsForUser(req.cookies.uid),
     user : users[`${req.cookies.uid}`]
+  };
+  if (req.cookies.uid) {
+    res.render('urls_index', templateVars);
+  } else {
+    res.redirect('/login');
   }
-  res.render('urls_index', templateVars);
 });
 
 TinyApp.get('/urls/new', (req, res) => {
   const templateVars = {
     user : users[`${req.cookies.uid}`]
   };
-  res.render('urls_new', templateVars);
+  if (req.cookies.uid) {
+    res.render('urls_new', templateVars);
+  } else {
+    res.redirect('/login');
+  }
 });
 
 TinyApp.get('/urls/:id', (req, res) => {
@@ -65,9 +97,9 @@ TinyApp.get('/urls/:id', (req, res) => {
 });
 
 TinyApp.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  if (urlDatabase[req.params.shortURL]) {
-    res.redirect(longURL);
+  const longURL = urlDatabase[`${req.params.shortURL}`].longURL;
+  if (longURL) {
+    res.redirect(`${longURL}`);
   } else {
     console.log("The short URL does not exist in the database.");
   }
@@ -89,20 +121,22 @@ TinyApp.get('/register', (req, res) => {
 
 //====== Post Method Routes
 
-TinyApp.post('/urls/:shortURLToDel/delete', (req, res) => {
-  if (urlDatabase[req.params.shortURLToDel]) {
-    delete urlDatabase[req.params.shortURLToDel];
+TinyApp.post('/urls/:id/delete', (req, res) => {
+  if (urlDatabase[req.params.id]) {
+    delete urlDatabase[req.params.id];
   }
   res.redirect('/urls');
 });
 
 TinyApp.post('/urls/new', (req, res) => {
-  urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
+    urlDatabase[req.params.id] = {};
+    urlDatabase[req.params.id].longURL = `http://${req.body.newlongURL}`;
+    urlDatabase[req.params.id].uid = `req.cookies.uid`;
   res.redirect('/urls');
 });
 
 TinyApp.post('/urls/:id', (req, res) => {
-    urlDatabase[req.params.id] = `http://${req.body.newlongURL}`;
+    urlDatabase[req.params.id].longURL = `http://${req.body.newlongURL}`;
     res.redirect('/urls');
 });
 

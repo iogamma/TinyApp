@@ -8,6 +8,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "bcrypt": "^1.0.2",
     "body-parser": "^1.16.1",
     "cookie-parser": "^1.4.3",
     "ejs": "^1.0.0",
