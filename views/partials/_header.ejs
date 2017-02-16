@@ -1,7 +1,11 @@
 <!-- views/partials/_header.ejs -->
 
 <form method='POST' action='/login' name="username">
-  <label for='username'>Username: </label>
-  <input id='username' type='text' name='user'>
-  <input type='submit' value='Login'>
+  <% if (username == undefined) { %>
+    <label for='username'>Username: </label>
+    <input id='username' type='text' name='username'>
+    <input type='submit' value='Login'>
+  <% } else { %>
+    <%= username %>
+  <% } %>
 </form>

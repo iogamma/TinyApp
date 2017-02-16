@@ -6,10 +6,9 @@
 <body>
   <header>
     <% include partials/_header %>
-    <br>
-    <a href="/urls/new">Add a new URL</a>
   </header>
-
+  <h1><%= `Hello! ${username}` %></h1>
+  <p><a href="/urls/new">Add a new URL</a></p>
   <ul>
     <% for(url in urls) { %>
       <li>

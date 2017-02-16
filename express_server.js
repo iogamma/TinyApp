@@ -3,7 +3,7 @@
 // load the things we need
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = ('fs');
+const cookieParser = require('cookie-parser');
 
 const TinyApp = express();
 const urlDatabase = {};
@@ -25,22 +25,26 @@ function generateRandStr() {
 
 TinyApp.set('view engine', 'ejs');
 TinyApp.use(bodyParser.urlencoded({extended: true}));
+TinyApp.use(cookieParser());
 
 // Get Routes
 
 TinyApp.get('/', (req, res) => {
-  res.render('urls_index');
+  const templateVars = { username: req.cookies.name };
+  res.render('index', templateVars);
 });
 
 TinyApp.get('/urls', (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase,
+                       username: req.cookies.name };
   res.render('urls_index', templateVars);
 });
 
 TinyApp.get('/urls/:id', (req, res) => {
-  let theID = req.params.id;
-  let templateVars = { urls: urlDatabase,
-                       id: theID };
+  const theID = req.params.id;
+  const templateVars = { urls: urlDatabase,
+                       id: theID,
+                       username: req.cookies.name };
   switch(theID) {
     case 'new':
       res.render('urls_new');
@@ -51,7 +55,8 @@ TinyApp.get('/urls/:id', (req, res) => {
 })
 
 TinyApp.get("/u/:shortURL", (req, res) => {
-  longURL = urlDatabase[req.params.shortURL];
+  const templateVars = { username: req.cookies.name };
+  const longURL = urlDatabase[req.params.shortURL];
   if (urlDatabase[req.params.shortURL]) {
     res.redirect(longURL);
   } else {
@@ -67,7 +72,7 @@ TinyApp.post("/urls/:shortURLToDel/delete", (req, res) => {
 });
 
 TinyApp.post("/urls/:id", (req, res) => {
-  let theID = req.params.id;
+  const theID = req.params.id;
   switch(theID) {
     case 'new':
       urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
@@ -78,6 +83,11 @@ TinyApp.post("/urls/:id", (req, res) => {
       res.redirect(`/urls`);
   };
 });
+
+TinyApp.post('/login', (req, res) => {
+  res.cookie('name', req.body.username);
+  res.redirect('/urls');
+})
 
 TinyApp.listen(8080);
 console.log('TinyApp server running.');
