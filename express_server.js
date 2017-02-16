@@ -47,7 +47,7 @@ TinyApp.get('/urls/:id', (req, res) => {
                        username: req.cookies.name };
   switch(theID) {
     case 'new':
-      res.render('urls_new');
+      res.render('urls_new', templateVars);
       break;
     default:
       res.render('urls_show', templateVars);
@@ -89,5 +89,9 @@ TinyApp.post('/login', (req, res) => {
   res.redirect('/urls');
 })
 
+TinyApp.post('/logout', (req, res) => {
+  res.clearCookie('name');
+  res.redirect('/');
+})
 TinyApp.listen(8080);
 console.log('TinyApp server running.');
