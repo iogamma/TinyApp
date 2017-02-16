@@ -5,7 +5,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = ('fs');
 
-const app = express();
+const TinyApp = express();
 const urlDatabase = {};
 
 function generateRandStr() {
@@ -23,21 +23,21 @@ function generateRandStr() {
   return randString;
 }
 
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({extended: true}));
+TinyApp.set('view engine', 'ejs');
+TinyApp.use(bodyParser.urlencoded({extended: true}));
 
 // Get Routes
 
-app.get('/', (req, res) => {
+TinyApp.get('/', (req, res) => {
   res.render('urls_index');
 });
 
-app.get('/urls', (req, res) => {
+TinyApp.get('/urls', (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
-app.get('/urls/:id', (req, res) => {
+TinyApp.get('/urls/:id', (req, res) => {
   let theID = req.params.id;
   let templateVars = { urls: urlDatabase,
                        id: theID };
@@ -50,7 +50,7 @@ app.get('/urls/:id', (req, res) => {
   };
 })
 
-app.get("/u/:shortURL", (req, res) => {
+TinyApp.get("/u/:shortURL", (req, res) => {
   longURL = urlDatabase[req.params.shortURL];
   if (urlDatabase[req.params.shortURL]) {
     res.redirect(longURL);
@@ -61,12 +61,12 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Post Routes
 
-app.post("/urls/:shortURLToDel/delete", (req, res) => {
+TinyApp.post("/urls/:shortURLToDel/delete", (req, res) => {
   delete urlDatabase[req.params.shortURLToDel];
   res.redirect('/urls');
 });
 
-app.post("/urls/:id", (req, res) => {
+TinyApp.post("/urls/:id", (req, res) => {
   let theID = req.params.id;
   switch(theID) {
     case 'new':
@@ -79,5 +79,5 @@ app.post("/urls/:id", (req, res) => {
   };
 });
 
-app.listen(8080);
+TinyApp.listen(8080);
 console.log('TinyApp server running.');
