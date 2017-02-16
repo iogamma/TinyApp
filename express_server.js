@@ -1,16 +1,28 @@
 /* express_server.js */
 
-// load the things we need
+//====== Constant Variables
+
+// Resolve libraries and modules in the Node search path
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
 const TinyApp = express();
 const urlDatabase = {};
+const PORT = 8080;
+
+//====== Setup
+
+// Set up middleware
+TinyApp.set('view engine', 'ejs');
+TinyApp.use(bodyParser.urlencoded({extended: true}));
+TinyApp.use(cookieParser());
+
+//====== Helper Functions
 
 function generateRandStr() {
   let randNum;
-  let randString = "";
+  let randString = '';
 
   for (let i = 0; i < 6; i++) {
     // generate a random number from 36 to 83 (ie starting at unicode character 0)
@@ -23,11 +35,7 @@ function generateRandStr() {
   return randString;
 }
 
-TinyApp.set('view engine', 'ejs');
-TinyApp.use(bodyParser.urlencoded({extended: true}));
-TinyApp.use(cookieParser());
-
-// Get Routes
+//====== Get Routes
 
 TinyApp.get('/', (req, res) => {
   const templateVars = { username: req.cookies.name };
@@ -35,26 +43,28 @@ TinyApp.get('/', (req, res) => {
 });
 
 TinyApp.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase,
-                       username: req.cookies.name };
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies.name };
   res.render('urls_index', templateVars);
 });
 
 TinyApp.get('/urls/:id', (req, res) => {
   const theID = req.params.id;
-  const templateVars = { urls: urlDatabase,
-                       id: theID,
-                       username: req.cookies.name };
+  const templateVars = {
+    urls: urlDatabase,
+    id: theID,
+    username: req.cookies.name };
   switch(theID) {
-    case 'new':
-      res.render('urls_new', templateVars);
-      break;
-    default:
-      res.render('urls_show', templateVars);
-  };
-})
+  case 'new':
+    res.render('urls_new', templateVars);
+    break;
+  default:
+    res.render('urls_show', templateVars);
+  }
+});
 
-TinyApp.get("/u/:shortURL", (req, res) => {
+TinyApp.get('/u/:shortURL', (req, res) => {
   const templateVars = { username: req.cookies.name };
   const longURL = urlDatabase[req.params.shortURL];
   if (urlDatabase[req.params.shortURL]) {
@@ -64,34 +74,37 @@ TinyApp.get("/u/:shortURL", (req, res) => {
   }
 });
 
-// Post Routes
+//====== Post Routes
 
-TinyApp.post("/urls/:shortURLToDel/delete", (req, res) => {
+TinyApp.post('/urls/:shortURLToDel/delete', (req, res) => {
   delete urlDatabase[req.params.shortURLToDel];
   res.redirect('/urls');
 });
 
-TinyApp.post("/urls/:id", (req, res) => {
+TinyApp.post('/urls/:id', (req, res) => {
   const theID = req.params.id;
   switch(theID) {
-    case 'new':
-      urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
-      res.redirect('/urls');
-      break;
-    default:
-      urlDatabase[theID] = `http://${req.body.newlongURL}`;
-      res.redirect(`/urls`);
-  };
+  case 'new':
+    urlDatabase[`${generateRandStr()}`] = `http://${req.body.longURL}`;
+    res.redirect('/urls');
+    break;
+  default:
+    urlDatabase[theID] = `http://${req.body.newlongURL}`;
+    res.redirect(`/urls`);
+  }
 });
 
 TinyApp.post('/login', (req, res) => {
   res.cookie('name', req.body.username);
   res.redirect('/urls');
-})
+});
 
 TinyApp.post('/logout', (req, res) => {
   res.clearCookie('name');
   res.redirect('/');
-})
-TinyApp.listen(8080);
-console.log('TinyApp server running.');
+});
+
+//====== Listener
+
+TinyApp.listen(PORT);
+console.log(`TinyApp server running using port: ${PORT}`);
