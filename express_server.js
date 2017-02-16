@@ -6,14 +6,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const toolbox = require('./lib/toolbox')
 
-const TinyApp = express();
+const TinyApp= express();
+const generateRandStr = toolbox.generateRandStr;
 const urlDatabase = {};
-let form = {
-  email: '',
-  password: ''
-};
-
+const userRecords = {};
+const PORT = 8080;
 //====== Setup
 
 // Set up middleware
@@ -23,29 +22,29 @@ TinyApp.use(cookieParser());
 
 //====== Helper Functions
 
-function generateRandStr() {
-  const max = 109;
-  const min = 48;
-  const offset1 = 7;  // number of unicode characters from : to @ inclusive
-  const offset2 = 6; // number of unicode characters from [ to ` inclusive
-  let randNum;
-  let randString = '';
+// function generateRandStr() {
+//   const max = 109;
+//   const min = 48;
+//   const offset1 = 7;  // number of unicode characters from : to @ inclusive
+//   const offset2 = 6; // number of unicode characters from [ to ` inclusive
+//   let randNum;
+//   let randString = '';
 
-  for (let i = 0; i < 6; i++) {
-    // generate a random number from 48 to 100 (ie starting at unicode character 0)
-    randNum = Math.floor(Math.random() * (max - min + 1) + min);
-    if (randNum <= 57) {
+//   for (let i = 0; i < 6; i++) {
+//     // generate a random number from 48 to 100 (ie starting at unicode character 0)
+//     randNum = Math.floor(Math.random() * (max - min + 1) + min);
+//     if (randNum <= 57) {
 
-    } else if (randNum > 57 && randNum < 84) {
-      randNum += offset1;
-    } else {
-      randNum += offset1 + offset2;
-    }
-    console.log(randNum);
-    randString += String.fromCharCode(randNum);
-  }
-  return randString;
-}
+//     } else if (randNum > 57 && randNum < 84) {
+//       randNum += offset1;
+//     } else {
+//       randNum += offset1 + offset2;
+//     }
+//     console.log(randNum);
+//     randString += String.fromCharCode(randNum);
+//   }
+//   return randString;
+// }
 
 //====== Get Routes
 
