@@ -7,7 +7,7 @@
   <header>
     <% include partials/_header %>
   </header>
-  <h1><%= `Hello! ${username}` %></h1>
+  <h1><%= `Hello! ${user.email}` %></h1>
   <p><a href="/urls/new">Add a new URL</a></p>
   <ul>
     <% for(url in urls) { %>

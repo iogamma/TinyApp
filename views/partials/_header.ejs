@@ -1,14 +1,13 @@
 <!-- views/partials/_header.ejs -->
 
-<% if (username === undefined) { %>
-  <form method='POST' action='/login' name='login'>
-    <label for='username'>Username: </label>
-    <input id='username' type='text' name='username'>
-    <input type='submit' value='Login'>
-  </form>
-<% } else { %>
-  <%= username %>
-  <form method='POST' action='/logout' name='logout'>
-    <input type='submit' value='Logout'>
-  </form>
-<% } %>
+  <% if (user) { %>
+    <form  method='post' action='/logout'>
+      <a href='/urls'>Home</a>
+      <b><%= user.email %></b>
+      <input type='submit' value='logout'>
+    </form>
+  <% } else { %>
+    <a href = '/'>Home | </a>
+    <a href = '/register'>Register | </a>
+    <a href = '/login'>Login | </a>
+  <% } %>

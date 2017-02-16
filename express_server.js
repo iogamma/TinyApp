@@ -11,7 +11,18 @@ const toolbox = require('./lib/toolbox')
 const TinyApp= express();
 const generateRandStr = toolbox.generateRandStr;
 const urlDatabase = {};
-const userRecords = {};
+const users = {
+  abcdef: {
+    id: generateRandStr(),
+    email: 'hal.wh.tang@gmail.com',
+    password: 'happy'
+  },
+  qwerty: {
+    id: generateRandStr(),
+    email: 'sandy.h@gmail.com',
+    password: 'joyful'
+  }
+};
 const PORT = 8080;
 
 //====== Setup
@@ -24,27 +35,32 @@ TinyApp.use(cookieParser());
 //====== Get Method Routes
 
 TinyApp.get('/', (req, res) => {
-  const templateVars = { username: req.cookies.name };
-  res.render('index', templateVars);
+  const templateVars = {
+    user : users[`${req.cookies.uid}`]
+  };
+    res.render('index', templateVars);
 });
 
 TinyApp.get('/urls', (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies.name };
+    user : users[`${req.cookies.uid}`]
+  }
   res.render('urls_index', templateVars);
 });
-//put the "new" route here
 
 TinyApp.get('/urls/new', (req, res) => {
-    const templateVars = { username: req.cookies.name };
-    res.render('urls_new', templateVars);
+  const templateVars = {
+    user : users[`${req.cookies.uid}`]
+  };
+  res.render('urls_new', templateVars);
 });
 
 TinyApp.get('/urls/:id', (req, res) => {
   const templateVars = {
     shortURL: req.params.id,
-    username: req.cookies.name };
+    user : users[`${req.cookies.uid}`]
+  };
   res.render('urls_show', templateVars);
 });
 
@@ -57,8 +73,18 @@ TinyApp.get('/u/:shortURL', (req, res) => {
   }
 });
 
+TinyApp.get('/login', (req, res) => {
+  const templateVars = {
+    user : users[`${req.cookies.uid}`]
+  };
+  res.render('login', templateVars);
+});
+
 TinyApp.get('/register', (req, res) => {
-  res.render('registeration.ejs');
+  const templateVars = {
+    user : users[`${req.cookies.uid}`]
+  };
+  res.render('register.ejs', templateVars);
 });
 
 //====== Post Method Routes
@@ -77,17 +103,46 @@ TinyApp.post('/urls/new', (req, res) => {
 
 TinyApp.post('/urls/:id', (req, res) => {
     urlDatabase[req.params.id] = `http://${req.body.newlongURL}`;
-    res.redirect(`/urls`);
+    res.redirect('/urls');
 });
 
 TinyApp.post('/login', (req, res) => {
-  res.cookie('name', req.body.username);
-  res.redirect('/urls');
+  for (let user in users) {
+    if (users[`${user}`].email === req.body.email) {
+      res.cookie('uid', user);
+      res.redirect('/urls');
+      break;
+    }
+  }
+  res.redirect(401, '/');
 });
 
 TinyApp.post('/logout', (req, res) => {
-  res.clearCookie('name');
+  res.clearCookie('uid');
   res.redirect('/');
+});
+
+TinyApp.post('/register', (req, res) => {
+  let newUserID;
+
+  if (!req.body.email || !req.body.password) {
+    res.redirect(400, '/');
+    return ;
+  } else {
+    // make sure the generated ID isn't in use
+    do {
+      newUserID = generateRandStr();
+    } while(users.newUserID)
+
+    // initiate new object for a new user
+    users[`${newUserID}`] = {};
+    users[`${newUserID}`].id = newUserID;
+    users[`${newUserID}`].email = req.body.email;
+    users[`${newUserID}`].password = req.body.password;
+
+    res.cookie('uid', newUserID);
+    res.redirect('/urls')
+  }
 });
 
 //====== Listener
