@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <title>TinyApp</title>
@@ -11,16 +11,14 @@
   <p><a href="/urls/new">Add a new URL</a></p>
   <ul>
     <% for(url in urls) { %>
-      <li>
+    <li>
       <%= `${url}: ${urls[url]}` %>
       <a href=<%= `/urls/${url}` %>>Edit</a>
       <form method="POST" action="/urls/<%= url %>/delete">
         <input type="submit" value="Delete">
       </form>
+    </li>
     <% } %>
   </ul>
-
-
-
 </body>
 </html>
