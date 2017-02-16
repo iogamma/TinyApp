@@ -5,7 +5,8 @@
 // Resolve libraries and modules in the Node search path
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcrypt');
 const toolbox = require('./lib/toolbox')
 
 const TinyApp= express();
@@ -70,7 +71,7 @@ TinyApp.get('/urls', (req, res) => {
     listOfURLs: urlsForUser(req.cookies.uid),
     user : users[`${req.cookies.uid}`]
   };
-  if (req.cookies.uid) {
+  if (users[`${req.cookies.uid}`]) {
     res.render('urls_index', templateVars);
   } else {
     res.redirect('/login');
@@ -143,9 +144,13 @@ TinyApp.post('/urls/:id', (req, res) => {
 TinyApp.post('/login', (req, res) => {
   for (let user in users) {
     if (users[`${user}`].email === req.body.email) {
-      res.cookie('uid', user);
-      res.redirect('/urls');
-      break;
+      if (bcrypt.compareSync(req.body.password, users[`${user}`].password)) {
+        res.cookie('uid', user);
+        res.redirect('/urls');
+        break;
+      } else {
+        break;
+      }
     }
   }
   res.redirect(401, '/');
@@ -172,7 +177,8 @@ TinyApp.post('/register', (req, res) => {
     users[`${newUserID}`] = {};
     users[`${newUserID}`].id = newUserID;
     users[`${newUserID}`].email = req.body.email;
-    users[`${newUserID}`].password = req.body.password;
+    const hashed_password = bcrypt.hashSync(req.body.password, 10);
+    users[`${newUserID}`].password = hashed_password;
 
     res.cookie('uid', newUserID);
     res.redirect('/urls')
