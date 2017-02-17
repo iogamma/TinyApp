@@ -12,12 +12,15 @@
   <table border='1'>
     <% for(const url in listOfURLs) { %>
     <tr>
-      <th><a href=<%= `/u/${url}` %>><%=`localhost:8080/u/${url}`%></a></th>
-      <th><a href=<%= `${listOfURLs[url]}` %>><%= `${listOfURLs[url]}` %></a></th>
-      <th><button><a href=<%= `/urls/${url}` %>>Edit</button></th>
-      <th><form method="POST" action="/urls/<%= url %>/delete">
+      <td style='font-size: 20px'><a href=<%= `/u/${url}` %>><%=`localhost:8080/u/${url}`%></a></td>
+      <td style='font-size: 20px'><a href=<%= listOfURLs[url].longURL %>><%= listOfURLs[url].longURL %></a></td>
+      <td style='font-size: 15px'><a href=<%= `/urls/${url}` %>>Edit</a></td>
+      <td><form method="POST" action="/urls/<%= url %>/delete">
         <input type="submit" value="Delete">
-      </form></th>
+      </form></td>
+    </tr>
+    <tr>
+      <td style='font-size: 15px' colspan='4'>Created: <%= listOfURLs[url].date %></td>
     </tr>
     <% } %>
   </ul>

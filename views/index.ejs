@@ -15,11 +15,11 @@
     <input type="submit" value="Submit">
   </form>
   <br>
-  <% if (`${Object.keys(tempURL)}` !== 'initTemp') { %>
-    Your long URL is: <a href=<%= `${tempURL[`${Object.keys(tempURL)}`]}` %>><%= `${tempURL[`${Object.keys(tempURL)}`]}` %></a>
+  <% if (`${Object.keys(tryMeURL)}` !== 'initTemp') { %>
+    Your long URL is: <a href=<%= `${tryMeURL[`${Object.keys(tryMeURL)}`]}` %>><%= `${tryMeURL[`${Object.keys(tryMeURL)}`]}` %></a>
     <br>
     Your tiny URL is:
-    <a href=<%= `/u/${Object.keys(tempURL)}` %>><%= `localhost:8080/u/${Object.keys(tempURL)}`%></a>
+    <a href=<%= `/u/${Object.keys(tryMeURL)}` %>><%= `localhost:8080/u/${Object.keys(tryMeURL)}`%></a>
   <% } %>
   <br>
   <a href='/register'>Register</a> today to store your own tiny URLs!

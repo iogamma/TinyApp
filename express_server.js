@@ -15,7 +15,7 @@ const generateRandStr = toolbox.generateRandStr;
 const urlDatabase = {
   'initTemp': {
     longURL: ' ',
-    uid: 'temp'
+    uid: 'tryMe'
   }
 };
 const usersDatabase = {};
@@ -37,7 +37,10 @@ function urlsForUser(id) {
   let listOfURLs = {};
   for (let shortURL in urlDatabase) {
     if (urlDatabase[`${shortURL}`].uid === id) {
-      listOfURLs[`${shortURL}`] = urlDatabase[`${shortURL}`].longURL;
+      listOfURLs[`${shortURL}`] = {
+        longURL: urlDatabase[`${shortURL}`].longURL,
+        date: urlDatabase[`${shortURL}`].date
+      };
     }
   }
   return listOfURLs;
@@ -56,11 +59,13 @@ function emailExist(email) {
 
 //====== GET /
 TinyApp.get('/', (req, res) => {
+  const userInDatabase = usersDatabase[`${req.session.user_id}`];
+  const urlInDatabase = urlDatabase[`${req.params.id}`];
   // used to let non registered users to try the app. See POST '/' endpoint.
-  let tempURL = urlsForUser('temp');
+  let tryMeURL = urlsForUser('tryMe');
   const templateVars = {
-    user: usersDatabase[`${req.session.user_id}`],
-    tempURL: tempURL
+    user: userInDatabase,
+    tryMeURL: tryMeURL
   };
   if (usersDatabase[`${req.session.user_id}`]) {
     res.redirect('/urls');
@@ -163,12 +168,12 @@ TinyApp.post('/', (req, res) => {
     shortURL = generateRandStr();
   } while(urlDatabase.newShortURL);
   //if (!urlDatabase[`${shortURL}`]) {
-  if (urlsForUser('temp')) {
-    delete urlDatabase[`${Object.keys(urlsForUser('temp'))}`];
+  if (urlsForUser('tryMe')) {
+    delete urlDatabase[`${Object.keys(urlsForUser('tryMe'))}`];
 
     urlDatabase[`${shortURL}`] = {
       longURL: `${req.body.longURL}`,
-      uid: 'temp'
+      uid: 'tryMe'
     };
   }
   res.redirect('/');
@@ -189,10 +194,11 @@ TinyApp.post('/urls/new', (req, res) => {
   do {
     newShortURL = generateRandStr();
   } while(urlDatabase[`${newShortURL}`]);
-
+  // URL database entry
   urlDatabase[`${newShortURL}`] = {
     longURL : `${req.body.longURL}`,
-    uid: `${req.session.user_id}`
+    uid: `${req.session.user_id}`,
+    date: toolbox.getDate()
   };
   res.redirect('/urls');
 });
@@ -208,8 +214,10 @@ TinyApp.post('/urls/:id', (req, res) => {
     } else if (urlInDatabase.uid !== `${req.session.user_id}`) {
       res.status(403).send('Forbidden! Your not allowed to access that URL.');
     } else {
-      urlInDatabase.longURL = `http://${req.body.newlongURL}`;
+      urlInDatabase.longURL = `${req.body.newlongURL}`;
+      urlInDatabase.date = toolbox.getDate();
       res.redirect('/urls');
+      return
     }
   } else {
       res.status(401).send('Unauthorized! You are not logged in. Please login <a href="/login"> here</a>');
