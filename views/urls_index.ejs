@@ -10,15 +10,11 @@
   <h2>My Links</h2>
   <p><a href="/urls/new">Add a new URL</a></p>
   <table border='1'>
-    <tr>
-      <th>Tiny URL</th>
-      <th>Long URL</th>
-    </tr>
     <% for(const url in listOfURLs) { %>
     <tr>
       <th><a href=<%= `/u/${url}` %>><%=`localhost:8080/u/${url}`%></a></th>
       <th><a href=<%= `${listOfURLs[url]}` %>><%= `${listOfURLs[url]}` %></a></th>
-      <th><a href=<%= `/urls/${url}` %>>Edit</a></th>
+      <th><button><a href=<%= `/urls/${url}` %>>Edit</button></th>
       <th><form method="POST" action="/urls/<%= url %>/delete">
         <input type="submit" value="Delete">
       </form></th>

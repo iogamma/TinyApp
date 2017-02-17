@@ -1,6 +1,6 @@
 /* express_server.js */
 
-//====== Constant Variables
+//====================== Constant Variables
 
 // Resolve libraries and modules in the Node search path
 const express = require('express');
@@ -18,9 +18,9 @@ const urlDatabase = {
     uid: 'temp'
   }
 };
-const users = {};
+const usersDatabase = {};
 
-//====== Setup
+//====================== Setup
 
 // Set up middleware
 TinyApp.set('view engine', 'ejs');
@@ -30,7 +30,9 @@ TinyApp.use(cookieSession({
   keys: ['key1', 'key2']
 }));
 
-//====== Helper Functions
+//====================== Helper Functions
+
+// Finds the URLs that belong to a certain user given their ID
 function urlsForUser(id) {
   let listOfURLs = {};
   for (let shortURL in urlDatabase) {
@@ -40,75 +42,79 @@ function urlsForUser(id) {
   }
   return listOfURLs;
 }
-
+// Searches userDatabase to see if a given email exists
 function emailExist(email) {
-  for (let user in users) {
-    if (users[`${user}`].email === email) {
+  for (let user in usersDatabase) {
+    if (usersDatabase[`${user}`].email === email) {
       return true;
     }
   }
   return false;
 }
 
-//====== Get Method Routes
+//====================== Get Method Routes
 
+//====== GET /
 TinyApp.get('/', (req, res) => {
   // used to let non registered users to try the app. See POST '/' endpoint.
   let tempURL = urlsForUser('temp');
   const templateVars = {
-    user: users[`${req.session.user_id}`],
+    user: usersDatabase[`${req.session.user_id}`],
     tempURL: tempURL
   };
-  if (users[`${req.session.user_id}`]) {
+  if (usersDatabase[`${req.session.user_id}`]) {
     res.redirect('/urls');
   } else {
     res.render('index', templateVars);
   }
 });
 
+//====== GET /urls
 TinyApp.get('/urls', (req, res) => {
   const templateVars = {
     listOfURLs: urlsForUser(req.session.user_id),
-    user: users[`${req.session.user_id}`]
+    user: usersDatabase[`${req.session.user_id}`]
   };
-  if (users[`${req.session.user_id}`]) {
+  if (usersDatabase[`${req.session.user_id}`]) {
     res.render('urls_index', templateVars);
   } else {
-    res.status(401);
-    res.render('error');
+    res.status(401).send('Unauthorized! You are not logged in. Please login <a href="/login"> here</a>');
   }
 });
 
+//====== GET /urls/new
 TinyApp.get('/urls/new', (req, res) => {
   const templateVars = {
-    user: users[`${req.session.user_id}`]
+    user: usersDatabase[`${req.session.user_id}`]
   };
-  if (users[`${req.session.user_id}`]) {
+  if (usersDatabase[`${req.session.user_id}`]) {
     res.render('urls_new', templateVars);
   } else {
     res.redirect('/login');
   }
 });
 
+//====== GET /urls/:id
 TinyApp.get('/urls/:id', (req, res) => {
   const templateVars = {
     shortURL: req.params.id,
-    user: users[`${req.session.user_id}`]
+    user: usersDatabase[`${req.session.user_id}`]
   };
 
-  if (users[`${req.session.user_id}`]) {
+  if (usersDatabase[`${req.session.user_id}`]) {
     if (!urlDatabase[`${req.params.id}`]) {
       res.status(404).send('Not Found. Tiny URL does not exist.');
     } else if (urlDatabase[`${req.params.id}`].uid !== `${req.session.user_id}`) {
-      res.status(403).send('Forbidden! Your not allowed to access that URL');
+      res.status(403).send('Forbidden! Your not registered to access that URL.');
     } else {
       res.render('urls_show', templateVars);
     }
   } else {
-    res.status(401).render('error');
+    res.status(401).send('Unauthorized! You are not logged in. Please login <a href="/login"> here</a>');
   }
 });
 
+//====== GET /u/:shortURL
 TinyApp.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[`${req.params.shortURL}`].longURL;
   if (longURL) {
@@ -118,35 +124,38 @@ TinyApp.get('/u/:shortURL', (req, res) => {
   }
 });
 
+//====== GET /login
 TinyApp.get('/login', (req, res) => {
-  if (users[`${req.session.user_id}`]) {
+  if (usersDatabase[`${req.session.user_id}`]) {
     res.redirect('/');
   } else {
     const templateVars = {
-      user: users[`${req.session.user_id}`]
+      user: usersDatabase[`${req.session.user_id}`]
     };
     res.render('login', templateVars);
   }
 });
 
+//====== GET /register
 TinyApp.get('/register', (req, res) => {
-  if (users[`${req.session.user_id}`]) {
+  if (usersDatabase[`${req.session.user_id}`]) {
     res.redirect('/');
   } else {
     const templateVars = {
-      user: users[`${req.session.user_id}`]
+      user: usersDatabase[`${req.session.user_id}`]
     };
     res.render('register.ejs', templateVars);
   }
 });
 
+//====== GET /gibberish
 TinyApp.get('/:gibberish', (req, res) => {
   res.redirect('/');
 });
 
+//==================== Post Method Routes
 
-//====== Post Method Routes
-
+//======POST /
 TinyApp.post('/', (req, res) => {
   let shortURL;
   // make sure the generated ID isn't in use
@@ -156,13 +165,16 @@ TinyApp.post('/', (req, res) => {
   //if (!urlDatabase[`${shortURL}`]) {
   if (urlsForUser('temp')) {
     delete urlDatabase[`${Object.keys(urlsForUser('temp'))}`];
-    urlDatabase[`${shortURL}`] = {};
-    urlDatabase[`${shortURL}`].longURL = `${req.body.longURL}`;
-    urlDatabase[`${shortURL}`].uid = 'temp';
+
+    urlDatabase[`${shortURL}`] = {
+      longURL: `${req.body.longURL}`,
+      uid: 'temp'
+    };
   }
   res.redirect('/');
 });
 
+//====== POST /urls/:id/delete
 TinyApp.post('/urls/:id/delete', (req, res) => {
   if (urlDatabase[req.params.id]) {
     delete urlDatabase[req.params.id];
@@ -170,54 +182,60 @@ TinyApp.post('/urls/:id/delete', (req, res) => {
   res.redirect('/urls');
 });
 
+//====== POST /urls/new
 TinyApp.post('/urls/new', (req, res) => {
   let newShortURL;
   // make sure the generated ID isn't in use
   do {
     newShortURL = generateRandStr();
-  } while(urlDatabase.newShortURL);
+  } while(urlDatabase[`${newShortURL}`]);
 
-  urlDatabase[`${newShortURL}`] = {};
-  urlDatabase[`${newShortURL}`].longURL = `${req.body.longURL}`;
-  urlDatabase[`${newShortURL}`].uid = `${req.session.user_id}`;
+  urlDatabase[`${newShortURL}`] = {
+    longURL : `${req.body.longURL}`,
+    uid: `${req.session.user_id}`
+  };
   res.redirect('/urls');
 });
 
+//====== POST /urls/:id
 TinyApp.post('/urls/:id', (req, res) => {
-  if (users[`${req.session.user_id}`]) {
-    if (!urlDatabase[`${req.params.id}`]) {
+  const userInDatabase = usersDatabase[`${req.session.user_id}`];
+  const urlInDatabase = urlDatabase[`${req.params.id}`];
+
+  if (userInDatabase) {
+    if (!urlInDatabase) {
       res.status(404).send('Not Found. Tiny URL does not exist.');
-    } else if (urlDatabase[`${req.params.id}`].uid !== `${req.session.user_id}`) {
-      res.status(403).send('Forbidden! Your not allowed to access that URL');
+    } else if (urlInDatabase.uid !== `${req.session.user_id}`) {
+      res.status(403).send('Forbidden! Your not allowed to access that URL.');
     } else {
-      urlDatabase[req.params.id].longURL = `http://${req.body.newlongURL}`;
+      urlInDatabase.longURL = `http://${req.body.newlongURL}`;
       res.redirect('/urls');
     }
   } else {
-    res.status(401).render('error');
+      res.status(401).send('Unauthorized! You are not logged in. Please login <a href="/login"> here</a>');
   }
 });
 
+//====== POST /login
 TinyApp.post('/login', (req, res) => {
-  for (let user in users) {
-    if (users[`${user}`].email === req.body.email) {
-      if (bcrypt.compareSync(req.body.password, users[`${user}`].password)) {
+  for (let user in usersDatabase) {
+    if (usersDatabase[`${user}`].email === req.body.email) {
+      if (bcrypt.compareSync(req.body.password, usersDatabase[`${user}`].password)) {
         req.session.user_id = `${user}`;
         res.redirect('/');
-        break;
-      } else {
-        break;
+        return;
       }
     }
   }
-  res.status(401).send('Unauthorized. Your login information is incorrect.');
-});
+    res.status(401).send('Unauthorized! Your login information is incorrect. <a href="#" onClick="history.go(-1)">Go Back.</a>');
+})
 
 TinyApp.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/');
 });
 
+//====== POST /register
 TinyApp.post('/register', (req, res) => {
   let newUserID;
 
@@ -225,18 +243,19 @@ TinyApp.post('/register', (req, res) => {
     res.status(400).send('Both fields must be filled out.');
   } else {
     if (emailExist(req.body.email)) {
-      res.status(400).send('You are already registered with that email.');
+      res.status(400).send('You are already registered with that email. <a href="#" onClick="history.go(-1)">Go Back.</a>');
     } else {
+      const hashed_password = bcrypt.hashSync(req.body.password, 10);
       // make sure the generated ID isn't in use
       do {
         newUserID = generateRandStr();
-      } while(users.newUserID);
+      } while(usersDatabase[`${newUserID}`]);
 
-      users[`${newUserID}`] = {};
-      users[`${newUserID}`].id = newUserID;
-      users[`${newUserID}`].email = req.body.email;
-      const hashed_password = bcrypt.hashSync(req.body.password, 10);
-      users[`${newUserID}`].password = hashed_password;
+      usersDatabase[`${newUserID}`] = {
+        id: newUserID,
+        email: req.body.email,
+        password: hashed_password
+      };
 
       req.session.user_id = `${newUserID}`;
       res.redirect('/urls');
@@ -244,6 +263,7 @@ TinyApp.post('/register', (req, res) => {
   }
 });
 
-//====== Listener
+//============ Listener
+
 TinyApp.listen(PORT);
 console.log(`TinyApp server running using port: ${PORT}`);
