@@ -3,21 +3,26 @@
 <head>
   <title>TinyApp</title>
 </head>
-<body>
+<body style="font-size:20px; padding:50px;">
   <header>
     <% include partials/_header %>
   </header>
   <h1><%= `Hello! ${user.email}` %></h1>
   <p><a href="/urls/new">Add a new URL</a></p>
-  <ul>
+  <table border='1'>
+    <tr>
+      <th>Tiny URL</th>
+      <th>Long URL</th>
+    </tr>
     <% for(const url in listOfURLs) { %>
-    <li>
-      <%= `${url}: ${listOfURLs[url]}` %>
-      <a href=<%= `/urls/${url}` %>>Edit</a>
-      <form method="POST" action="/urls/<%= url %>/delete">
+    <tr>
+      <th><a href=<%= `/u/${url}` %>><%=`localhost:8080/u/${url}`%></a></th>
+      <th><a href=<%= `${listOfURLs[url]}` %>><%= `${listOfURLs[url]}` %></a></th>
+      <th><a href=<%= `/urls/${url}` %>>Edit</a></th>
+      <th><form method="POST" action="/urls/<%= url %>/delete">
         <input type="submit" value="Delete">
-      </form>
-    </li>
+      </form></th>
+    </tr>
     <% } %>
   </ul>
 </body>

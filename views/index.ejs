@@ -3,10 +3,24 @@
 <head>
   <title>TinyApp</title>
 </head>
-<body>
+<body style='font-size:20px; padding:50px;'>
  <header>
     <% include partials/_header %>
   </header>
   <h1>Welcome to TinyApp!</h1>
+  <form  method="POST" action="/" style="margin:150;">
+    <label for="longURL">Enter a URL:</label>
+    <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
+    <input type="submit" value="Submit">
+  </form>
+  <br>
+  <% if (`${Object.keys(tempURL)}` !== 'initTemp') { %>
+    Your long URL is: <a href=<%= `${tempURL[`${Object.keys(tempURL)}`]}` %>><%= `${tempURL[`${Object.keys(tempURL)}`]}` %></a>
+    <br>
+    Your tiny URL is:
+    <a href=<%= `/u/${Object.keys(tempURL)}` %>><%= `localhost:8080/u/${Object.keys(tempURL)}`%></a>
+  <% } %>
+  <br>
+  <a href='/register'>Register</a> today to store your own tiny URLs!
 </body>
 </html>

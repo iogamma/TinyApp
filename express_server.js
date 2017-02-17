@@ -9,11 +9,16 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const toolbox = require('./lib/toolbox')
 
+const PORT = 8080;
 const TinyApp= express();
 const generateRandStr = toolbox.generateRandStr;
-const urlDatabase = {};
+const urlDatabase = {
+  'initTemp': {
+    longURL: ' ',
+    uid: 'temp'
+  }
+};
 const users = {};
-const PORT = 8080;
 
 //====== Setup
 
@@ -39,14 +44,16 @@ function urlsForUser(id) {
 //====== Get Method Routes
 
 TinyApp.get('/', (req, res) => {
+  let tempURL = urlsForUser('temp');
   const templateVars = {
-    user : users[`${req.session.user_id}`]
+    user : users[`${req.session.user_id}`],
+    tempURL: tempURL
   };
-    if (users[`${req.session.user_id}`]) {
-      res.redirect('/urls');
-    } else {
-      res.render('index', templateVars);
-    }
+  if (users[`${req.session.user_id}`]) {
+    res.redirect('/urls');
+  } else {
+    res.render('index', templateVars);
+  }
 });
 
 TinyApp.get('/urls', (req, res) => {
@@ -57,7 +64,7 @@ TinyApp.get('/urls', (req, res) => {
   if (users[`${req.session.user_id}`]) {
     res.render('urls_index', templateVars);
   } else {
-    res.redirect('/login');
+    res.redirect(401,'/login');
   }
 });
 
@@ -109,6 +116,24 @@ TinyApp.get('/register', (req, res) => {
 
 //====== Post Method Routes
 
+TinyApp.post('/', (req, res) => {
+  let shortURL;
+  // make sure the generated ID isn't in use
+  do {
+    shortURL = generateRandStr();
+  } while(urlDatabase.newShortURL)
+  //if (!urlDatabase[`${shortURL}`]) {
+  if (urlsForUser('temp')) {
+    delete urlDatabase[`${Object.keys(urlsForUser('temp'))}`];
+    urlDatabase[`${shortURL}`] = {};
+    urlDatabase[`${shortURL}`].longURL = `http://${req.body.longURL}`;
+    urlDatabase[`${shortURL}`].uid = 'temp';
+  }
+
+
+  res.redirect('/');
+});
+
 TinyApp.post('/urls/:id/delete', (req, res) => {
   if (urlDatabase[req.params.id]) {
     delete urlDatabase[req.params.id];
@@ -117,7 +142,11 @@ TinyApp.post('/urls/:id/delete', (req, res) => {
 });
 
 TinyApp.post('/urls/new', (req, res) => {
-  const newShortURL = generateRandStr();
+  let newShortURL;
+  // make sure the generated ID isn't in use
+  do {
+    newShortURL = generateRandStr();
+  } while(urlDatabase.newShortURL)
 
   urlDatabase[`${newShortURL}`] = {};
   urlDatabase[`${newShortURL}`].longURL = `http://${req.body.longURL}`;
@@ -162,7 +191,6 @@ TinyApp.post('/register', (req, res) => {
       newUserID = generateRandStr();
     } while(users.newUserID)
 
-    // initiate new object for a new user
     users[`${newUserID}`] = {};
     users[`${newUserID}`].id = newUserID;
     users[`${newUserID}`].email = req.body.email;
