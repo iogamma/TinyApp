@@ -2,8 +2,8 @@
 
   <% if (user) { %>
     <form  method='post' action='/logout'>
-      <a href='/urls'>Home</a>
-      <b><%= user.email %></b>
+      <b><%= user.email %>| </b>
+      <a href='/urls'>My Links</a> |
       <input type='submit' value='logout'>
     </form>
   <% } else { %>
