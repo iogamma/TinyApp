@@ -1,13 +1,17 @@
 <!-- views/partials/_header.ejs -->
 
+  <h1> TinyApp </h1>
+  <hr>
   <% if (user) { %>
     <form  method='post' action='/logout'>
-      <b><%= user.email %>| </b>
+      <b><%= user.email %></b> |
       <a href='/urls'>My Links</a> |
       <input type='submit' value='logout'>
     </form>
+    <hr>
   <% } else { %>
     <a href = '/'>Home | </a>
     <a href = '/register'>Register | </a>
     <a href = '/login'>Login</a>
+    <hr>
   <% } %>
