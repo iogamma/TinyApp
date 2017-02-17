@@ -11,32 +11,8 @@ const toolbox = require('./lib/toolbox')
 
 const TinyApp= express();
 const generateRandStr = toolbox.generateRandStr;
-const urlDatabase = {
-  zxcvbn: {
-    longURL: 'http://www.google.ca',
-    uid: 'abcdef'
-  },
-  uidfke: {
-    longURL: 'http://www.askjeeves.com',
-    uid: 'qwerty'
-  },
-  hfkell: {
-    longURL: 'http://www.monster.ca',
-    uid: 'abcdef'
-  }
-};
-const users = {
-  abcdef: {
-    id: generateRandStr(),
-    email: 'hal.wh.tang@gmail.com',
-    password: 'happy'
-  },
-  qwerty: {
-    id: generateRandStr(),
-    email: 'sandy.h@gmail.com',
-    password: 'joyful'
-  }
-};
+const urlDatabase = {};
+const users = {};
 const PORT = 8080;
 
 //====== Setup
@@ -44,7 +20,10 @@ const PORT = 8080;
 // Set up middleware
 TinyApp.set('view engine', 'ejs');
 TinyApp.use(bodyParser.urlencoded({extended: true}));
-TinyApp.use(cookieParser());
+TinyApp.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}))
 
 //====== Helper Functions
 function urlsForUser(id) {
@@ -61,17 +40,21 @@ function urlsForUser(id) {
 
 TinyApp.get('/', (req, res) => {
   const templateVars = {
-    user : users[`${req.cookies.uid}`]
+    user : users[`${req.session.user_id}`]
   };
-    res.render('index', templateVars);
+    if (users[`${req.session.user_id}`]) {
+      res.redirect('/urls');
+    } else {
+      res.render('index', templateVars);
+    }
 });
 
 TinyApp.get('/urls', (req, res) => {
   const templateVars = {
-    listOfURLs: urlsForUser(req.cookies.uid),
-    user : users[`${req.cookies.uid}`]
+    listOfURLs: urlsForUser(req.session.user_id),
+    user : users[`${req.session.user_id}`]
   };
-  if (users[`${req.cookies.uid}`]) {
+  if (users[`${req.session.user_id}`]) {
     res.render('urls_index', templateVars);
   } else {
     res.redirect('/login');
@@ -80,9 +63,9 @@ TinyApp.get('/urls', (req, res) => {
 
 TinyApp.get('/urls/new', (req, res) => {
   const templateVars = {
-    user : users[`${req.cookies.uid}`]
+    user: users[`${req.session.user_id}`]
   };
-  if (req.cookies.uid) {
+  if (users[`${req.session.user_id}`]) {
     res.render('urls_new', templateVars);
   } else {
     res.redirect('/login');
@@ -92,9 +75,13 @@ TinyApp.get('/urls/new', (req, res) => {
 TinyApp.get('/urls/:id', (req, res) => {
   const templateVars = {
     shortURL: req.params.id,
-    user : users[`${req.cookies.uid}`]
+    user : users[`${req.session.user_id}`]
   };
-  res.render('urls_show', templateVars);
+  if (users[`${req.session.user_id}`]) {
+      res.render('urls_show', templateVars);
+    } else {
+      res.redirect(401, '/login');
+    }
 });
 
 TinyApp.get('/u/:shortURL', (req, res) => {
@@ -108,14 +95,14 @@ TinyApp.get('/u/:shortURL', (req, res) => {
 
 TinyApp.get('/login', (req, res) => {
   const templateVars = {
-    user : users[`${req.cookies.uid}`]
+    user : users[`${req.session.user_id}`]
   };
   res.render('login', templateVars);
 });
 
 TinyApp.get('/register', (req, res) => {
   const templateVars = {
-    user : users[`${req.cookies.uid}`]
+    user : users[`${req.session.user_id}`]
   };
   res.render('register.ejs', templateVars);
 });
@@ -130,9 +117,11 @@ TinyApp.post('/urls/:id/delete', (req, res) => {
 });
 
 TinyApp.post('/urls/new', (req, res) => {
-    urlDatabase[req.params.id] = {};
-    urlDatabase[req.params.id].longURL = `http://${req.body.newlongURL}`;
-    urlDatabase[req.params.id].uid = `req.cookies.uid`;
+  const newShortURL = generateRandStr();
+
+  urlDatabase[`${newShortURL}`] = {};
+  urlDatabase[`${newShortURL}`].longURL = `http://${req.body.longURL}`;
+  urlDatabase[`${newShortURL}`].uid = `${req.session.user_id}`;
   res.redirect('/urls');
 });
 
@@ -145,7 +134,7 @@ TinyApp.post('/login', (req, res) => {
   for (let user in users) {
     if (users[`${user}`].email === req.body.email) {
       if (bcrypt.compareSync(req.body.password, users[`${user}`].password)) {
-        res.cookie('uid', user);
+        req.session.user_id = `${user}`;
         res.redirect('/urls');
         break;
       } else {
@@ -157,7 +146,7 @@ TinyApp.post('/login', (req, res) => {
 });
 
 TinyApp.post('/logout', (req, res) => {
-  res.clearCookie('uid');
+  req.session = null;
   res.redirect('/');
 });
 
@@ -180,7 +169,7 @@ TinyApp.post('/register', (req, res) => {
     const hashed_password = bcrypt.hashSync(req.body.password, 10);
     users[`${newUserID}`].password = hashed_password;
 
-    res.cookie('uid', newUserID);
+    req.session.user_id = `${newUserID}`;
     res.redirect('/urls')
   }
 });
