@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const toolbox = require('./lib/toolbox');
+const methodOverride = require('method-override');
 
 const PORT = 8080;
 const TinyApp = express();
@@ -29,6 +30,7 @@ TinyApp.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }));
+TinyApp.use(methodOverride('_method'));
 
 //====================== Helper Functions
 
@@ -121,9 +123,11 @@ TinyApp.get('/urls/:id', (req, res) => {
 
 //====== GET /u/:shortURL
 TinyApp.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[`${req.params.shortURL}`].longURL;
-  if (longURL) {
-    res.redirect(`${longURL}`);
+  if(urlDatabase[`${req.params.shortURL}`]) {
+    const longURL = urlDatabase[`${req.params.shortURL}`].longURL;
+    if (longURL) {
+      res.redirect(`${longURL}`);
+    }
   } else {
     res.status(404).send('Not Found. Tiny URL does not exist.');
   }
@@ -179,24 +183,22 @@ TinyApp.post('/', (req, res) => {
   res.redirect('/');
 });
 
-//====== POST /urls/:id/delete
-TinyApp.post('/urls/:id/delete', (req, res) => {
-  if (urlDatabase[req.params.id]) {
-    delete urlDatabase[req.params.id];
-  }
-  res.redirect('/urls');
-});
-
 //====== POST /urls/new
 TinyApp.post('/urls/new', (req, res) => {
+  const httpRegex = /^http?:\/\//;
   let newShortURL;
+  let longURL = `${req.body.longURL}`
   // make sure the generated ID isn't in use
   do {
     newShortURL = generateRandStr();
   } while(urlDatabase[`${newShortURL}`]);
+
+  if (!httpRegex.test(longURL)) {
+    longURL = 'http://' + longURL;
+  }
   // URL database entry
   urlDatabase[`${newShortURL}`] = {
-    longURL : `${req.body.longURL}`,
+    longURL : longURL,
     uid: `${req.session.user_id}`,
     date: toolbox.getDate()
   };
@@ -205,8 +207,14 @@ TinyApp.post('/urls/new', (req, res) => {
 
 //====== POST /urls/:id
 TinyApp.post('/urls/:id', (req, res) => {
+  const httpRegex = /^http?:\/\//;
   const userInDatabase = usersDatabase[`${req.session.user_id}`];
   const urlInDatabase = urlDatabase[`${req.params.id}`];
+  let newLongURL = `${req.body.newlongURL}`;
+
+  if(!httpRegex.test(newLongURL)) {
+    newLongURL = 'http://' + newLongURL;
+  }
 
   if (userInDatabase) {
     if (!urlInDatabase) {
@@ -214,7 +222,7 @@ TinyApp.post('/urls/:id', (req, res) => {
     } else if (urlInDatabase.uid !== `${req.session.user_id}`) {
       res.status(403).send('Forbidden! Your not allowed to access that URL.');
     } else {
-      urlInDatabase.longURL = `${req.body.newlongURL}`;
+      urlInDatabase.longURL = newLongURL;
       urlInDatabase.date = toolbox.getDate();
       res.redirect('/urls');
       return
@@ -270,6 +278,23 @@ TinyApp.post('/register', (req, res) => {
     }
   }
 });
+
+//==================== Put Method Routes
+
+
+//==================== Delete Method Routes
+
+//====== DELETE /urls/:id
+TinyApp.delete('/urls/:id', (req, res) => {
+  if (urlDatabase[req.params.id]) {
+    delete urlDatabase[req.params.id];
+  }
+  res.redirect('/urls');
+});
+
+//==================== Chained Routes
+
+
 
 //============ Listener
 

@@ -15,7 +15,7 @@
       <td style='font-size: 20px'><a href=<%= `/u/${url}` %>><%=`localhost:8080/u/${url}`%></a></td>
       <td style='font-size: 20px'><a href=<%= listOfURLs[url].longURL %>><%= listOfURLs[url].longURL %></a></td>
       <td style='font-size: 15px'><a href=<%= `/urls/${url}` %>>Edit</a></td>
-      <td><form method="POST" action="/urls/<%= url %>/delete">
+      <td><form method="POST" action="/urls/<%= url %>?_method=DELETE">
         <input type="submit" value="Delete">
       </form></td>
     </tr>

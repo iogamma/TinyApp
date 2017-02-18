@@ -12,7 +12,8 @@
     "body-parser": "^1.16.1",
     "cookie-session": "^2.0.0-alpha.3",
     "ejs": "^1.0.0",
-    "express": "^4.6.1"
+    "express": "^4.6.1",
+    "method-override": "^2.3.7"
   },
   "author": "",
   "license": "ISC"
